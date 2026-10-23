@@ -11,10 +11,14 @@ class TaskState(TypedDict):
     outputs: list
 
 
-def run_task(store, config, project, prompt, providers=None, skill_names=(), allowed=False):
+def run_task(store, config, project, prompt, providers=None, skill_names=(), allowed=False,
+             memory=None, remember_result=False):
     if not project.strip() or not prompt.strip():
         raise ValueError("Informe projeto e pedido.")
     providers = providers or {"plan": "demo", "work": "demo", "review": "demo"}
+    if memory is None:
+        from .memory import SharedMemory
+        memory = SharedMemory(store, config)
     # Validar tudo antes de criar uma tarefa ou iniciar um processo.
     clients = {stage: get_provider(providers[stage], config, allowed)
                for stage in ("plan", "work", "review")}
@@ -56,9 +60,12 @@ def run_task(store, config, project, prompt, providers=None, skill_names=(), all
     graph.add_edge("review", END)
     try:
         result = graph.compile().invoke({
-            "prompt": prompt, "memories": store.search(project),
+            "prompt": prompt, "memories": memory.search(project, prompt),
             "skills": skills, "outputs": []})
         store.finish_task(task_id, "completed", {"outputs": result["outputs"]})
+        if remember_result:
+            review = result["outputs"][-1]["text"]
+            memory.add(project, review, "review")
     except Exception:
         # Preservar o ID e a falha, sem armazenar exceções externas que possam conter segredos.
         store.finish_task(task_id, "failed", {"error": "Falha na execução. Consulte os eventos."})

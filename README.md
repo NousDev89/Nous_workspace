@@ -7,14 +7,14 @@ Estação de trabalho híbrida para orquestrar agentes, ferramentas, habilidades
 - CLI em português, executável no Windows com Python 3.11 ou superior.
 - Fluxo LangGraph: planejamento → execução → revisão.
 - Provedor selecionável por etapa.
-- SQLite para tarefas, eventos e memória compartilhada com origem e projeto.
+- SQLite para tarefas e eventos; memória compartilhada local ou semântica com Mem0.
 - Habilidades Markdown e ferramentas locais com limite de diretório.
 - Demonstração offline, protocolo de adaptadores externos por processo e rota para GPU em nuvem.
 - Testes automatizados em Windows e Linux.
 
 **Esta versão é uma base executável, não uma integração pronta com todos os serviços.**
 Manus, OpenAI, Codex, Claude Code, Gemini e Grok têm entradas de configuração.
-Seus adaptadores nativos, painel visual, MCP e memória semântica com mem0ai estão no roteiro.
+Seus adaptadores nativos, painel visual e MCP estão no roteiro.
 A demonstração não chama modelos, não programa e não altera arquivos do projeto.
 
 ## Instalar no Windows PowerShell
@@ -102,4 +102,16 @@ O fluxo de IA ainda não possui execução automática de ferramentas.
 [Arquitetura](docs/ARCHITECTURE.md) · [Especificação do Workspace](docs/NOUS_WORKSPACE.md) · [GPU e Llama](docs/LLAMA.md) · [Roteiro](docs/ROADMAP.md)
 
 A base usa SQLite com busca textual literal. A instalação anterior de mem0ai no Python global não
-o torna automaticamente disponível no ambiente virtual, e ele ainda não é utilizado aqui.
+o torna automaticamente disponível no ambiente virtual. Para ativar a memória semântica do Mem0,
+instale o extra, defina a chave fora do repositório e altere o backend:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e .[mem0]
+$env:MEM0_API_KEY = "sua-chave-do-mem0"
+# Em nous.config.json, troque memory.backend de "sqlite" para "mem0".
+.\.venv\Scripts\python.exe -m nous_dev memory status
+```
+
+O `user_id` enviado ao Mem0 inclui o nome do projeto, portanto todos os nós do LangGraph recebem
+o mesmo contexto daquele projeto sem acessar memórias de outro. Use `--remember-result` no comando
+`run` somente para persistir a revisão final da tarefa.

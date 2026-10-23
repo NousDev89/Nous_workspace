@@ -10,6 +10,7 @@ from unittest.mock import patch
 from nous_dev.cli import main
 from nous_dev.config import load_config
 from nous_dev.orchestrator import run_task
+from nous_dev.memory import SharedMemory
 from nous_dev.providers import CommandProvider
 from nous_dev.store import Store
 from nous_dev.tools import WorkspaceTools
@@ -36,8 +37,19 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(self.store.search("a", "Python")), 1)
         self.assertEqual(self.store.search("b", "Python"), [])
 
+    def test_shared_memory_defaults_to_local_sqlite(self):
+        memory = SharedMemory(self.store, self.config)
+        memory.add("a", "memória compartilhada", "user")
+        self.assertEqual(memory.status()["backend"], "sqlite")
+        self.assertEqual(memory.search("a", "compartilhada")[0]["content"], "memória compartilhada")
+
+    def test_local_shared_memory_includes_recent_project_context(self):
+        memory = SharedMemory(self.store, self.config)
+        memory.add("a", "a interface será em português", "user")
+        self.assertEqual(len(memory.search("a", "criar painel")), 1)
+
     def test_workflow_passes_memory_and_prior_outputs(self):
-        self.store.add_memory("a", "contexto compartilhado")
+        self.store.add_memory("a", "construir com contexto compartilhado")
         seen = []
 
         class Recording:
@@ -77,7 +89,7 @@ class CoreTests(unittest.TestCase):
             self.root,
             allowed=True,
         )
-        self.assertEqual(provider.complete({"prompt": "Olá"}), "Olá")
+        self.assertEqual(provider.complete({"prompt": "hello"}), "hello")
 
     def test_config_paths_are_relative_to_config_file(self):
         path = self.root / "nous.config.json"

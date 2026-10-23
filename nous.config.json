@@ -3,6 +3,11 @@
   "data_dir": ".nous",
   "workspace": ".",
   "skills_dir": "skills",
+  "memory": {
+    "backend": "sqlite",
+    "api_key_env": "MEM0_API_KEY",
+    "namespace": "nous-workstation"
+  },
   "orchestration": {
     "graph": "router -> creative|implement|review|action|cloud_gpu",
     "default_route": "cloud-api",

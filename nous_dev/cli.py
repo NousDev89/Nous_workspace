@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 from .config import load_config
+from .memory import SharedMemory
 from .skills import list_skills
 from .store import Store
 from .tools import WorkspaceTools
@@ -25,6 +26,7 @@ def parser():
     search = memory.add_parser("search")
     search.add_argument("--project", required=True)
     search.add_argument("--query", default="")
+    memory.add_parser("status")
     run = commands.add_parser("run")
     run.add_argument("--project", required=True)
     run.add_argument("--prompt", required=True)
@@ -33,6 +35,8 @@ def parser():
     run.add_argument("--reviewer", default="demo")
     run.add_argument("--skill", action="append", default=[])
     run.add_argument("--allow-commands", action="store_true")
+    run.add_argument("--remember-result", action="store_true",
+                     help="Salva a saída final como memória compartilhada do projeto.")
     task = commands.add_parser("task")
     task.add_argument("id")
     tool = commands.add_parser("tool")
@@ -54,11 +58,12 @@ def main(argv=None):
             emit(list_skills(config["skills_dir"]))
             return 0
         store = Store(config["data_dir"] / "nous.sqlite3")
+        memory = SharedMemory(store, config)
         if args.command == "init":
             emit({"status": "initialized", "database": str(config["data_dir"] / "nous.sqlite3")})
         elif args.command == "status":
             emit({"version": "0.1.0", "database": str(config["data_dir"] / "nous.sqlite3"),
-                  "providers": {
+                  "memory": memory.status(), "providers": {
                       name: {
                           "kind": spec.get("kind"),
                           "status": ("demo" if spec.get("kind") == "demo" else
@@ -67,16 +72,19 @@ def main(argv=None):
                       } for name, spec in config.get("providers", {}).items()
                   }})
         elif args.command == "memory" and args.action == "add":
-            emit({"id": store.add_memory(args.project, args.content)})
+            emit({"id": memory.add(args.project, args.content)})
+        elif args.command == "memory" and args.action == "status":
+            emit(memory.status())
         elif args.command == "memory":
-            emit(store.search(args.project, args.query))
+            emit(memory.search(args.project, args.query))
         elif args.command == "task":
             emit(store.task(args.id))
         elif args.command == "run":
             from .orchestrator import run_task
             emit(run_task(store, config, args.project, args.prompt,
                           {"plan": args.planner, "work": args.worker, "review": args.reviewer},
-                          args.skill, args.allow_commands))
+                          args.skill, args.allow_commands, memory,
+                          args.remember_result))
         return 0
     except (ValueError, OSError, RuntimeError, ImportError) as error:
         print(f"Erro: {error}", file=sys.stderr)
