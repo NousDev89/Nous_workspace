@@ -51,7 +51,7 @@ este protocolo. É necessário um adaptador que traduza a entrada e normalize a 
 | Codex | Registro desativado; adaptador de agente pendente |
 | Claude Code | Registro desativado; adaptador de agente pendente |
 | Claude API | `kind: anthropic`; Messages API para saída de texto, sem ferramentas locais |
-| Gemini | Registro desativado; adaptador pendente |
+| Gemini | `kind: gemini`; chama a API `generateContent` para saída de texto |
 | Grok | `kind: grok`; chama a Responses API da xAI |
 | Demo | Fluxo local sem IA |
 | bridge-example | Processo de exemplo sem IA |

@@ -175,6 +175,49 @@ class AnthropicProvider:
         return text
 
 
+class GeminiProvider:
+    """Cliente REST do Gemini para roteamento e tarefas leves de texto."""
+
+    def __init__(self, spec, network_allowed=False):
+        self.api_key, self.timeout = _require_enabled_network(spec, "gemini", network_allowed)
+        self.base_url = str(spec.get(
+            "base_url", "https://generativelanguage.googleapis.com/v1beta/models"
+        )).rstrip("/")
+        self.model = str(spec.get("model", "gemini-3.8-flash"))
+        self.max_output_tokens = int(spec.get("max_output_tokens", 2048))
+        if not 1 <= self.max_output_tokens <= 16384:
+            raise ValueError("max_output_tokens deve estar entre 1 e 16384.")
+
+    def complete(self, request):
+        context = {
+            "pedido": request["prompt"],
+            "memorias": request["memories"],
+            "saidas_anteriores": request["previous"],
+            "habilidades": request["skills"],
+        }
+        result = _post_json(
+            f"{self.base_url}/{self.model}:generateContent",
+            {"x-goog-api-key": self.api_key},
+            {
+                "system_instruction": {"parts": [{"text": request["instructions"]}]},
+                "contents": [{
+                    "role": "user",
+                    "parts": [{"text": json.dumps(context, ensure_ascii=False)}],
+                }],
+                "generationConfig": {"maxOutputTokens": self.max_output_tokens},
+            },
+            self.timeout,
+        )
+        candidates = result.get("candidates", [])
+        parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+        texts = [part["text"] for part in parts
+                 if isinstance(part, dict) and isinstance(part.get("text"), str)]
+        text = "\n".join(texts).strip()
+        if not text:
+            raise RuntimeError("Gemini não retornou texto de saída.")
+        return text
+
+
 class ManusProvider:
     """Cria uma tarefa Manus v2 e devolve sua URL; não confirma ações externas."""
 
@@ -224,6 +267,8 @@ def get_provider(name, config, allowed=False, network_allowed=False):
         return GrokProvider(spec, network_allowed)
     if spec.get("kind") == "anthropic":
         return AnthropicProvider(spec, network_allowed)
+    if spec.get("kind") == "gemini":
+        return GeminiProvider(spec, network_allowed)
     if spec.get("kind") == "manus":
         return ManusProvider(spec, network_allowed)
     raise ValueError("Tipo de provedor não suportado.")

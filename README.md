@@ -14,7 +14,7 @@ Estação de trabalho híbrida para orquestrar agentes, ferramentas, habilidades
 
 **Esta versão é uma base executável, não uma integração pronta com todos os serviços.**
 Manus, OpenAI, Codex, Claude Code, Gemini e Grok têm entradas de configuração.
-Os adaptadores de Grok, Claude API e Manus já estão disponíveis. Claude Code continua como
+Os adaptadores de Grok, Claude API, Gemini e Manus já estão disponíveis. Claude Code continua como
 adaptador de agente local separado.
 Painel visual e MCP estão no roteiro.
 A demonstração não chama modelos, não programa e não altera arquivos do projeto.
@@ -93,7 +93,7 @@ chaves apenas no computador que executará as chamadas:
 
 ```powershell
 Copy-Item .env.example .env
-# Edite .env localmente: XAI_API_KEY=..., ANTHROPIC_API_KEY=... e/ou MANUS_API_KEY=...
+# Edite .env localmente: XAI_API_KEY=..., ANTHROPIC_API_KEY=..., GEMINI_API_KEY=... e/ou MANUS_API_KEY=...
 ```
 
 Em `nous.config.json`, altere o provedor desejado para `"enabled": true`. Depois, uma chamada de
@@ -102,11 +102,13 @@ rede exige confirmação explícita na própria CLI:
 ```powershell
 .\.venv\Scripts\python.exe -m nous_dev run --project nous --prompt "Criar alternativas" --planner grok --allow-network
 .\.venv\Scripts\python.exe -m nous_dev run --project nous --prompt "Implementar o módulo" --worker claude-api --allow-network
+.\.venv\Scripts\python.exe -m nous_dev run --project nous --prompt "Classificar esta tarefa" --planner gemini --allow-network
 .\.venv\Scripts\python.exe -m nous_dev run --project nous --prompt "Executar pesquisa" --worker manus --allow-network
 ```
 
-Grok usa a Responses API; `claude-api` usa a Messages API e retorna texto. Isso não substitui o
-Claude Code com terminal e edição de arquivos. Manus cria uma tarefa privada e assíncrona,
+Grok usa a Responses API; `claude-api` usa a Messages API e retorna texto; Gemini usa
+`generateContent` para texto. Isso não substitui o Claude Code com terminal e edição de arquivos.
+Manus cria uma tarefa privada e assíncrona,
 retornando o ID e o link; o Nous não aprova conectores, envios, compras ou outras ações externas
 em nome do usuário.
 

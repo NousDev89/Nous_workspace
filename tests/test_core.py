@@ -162,6 +162,26 @@ class CoreTests(unittest.TestCase):
                 self.assertEqual(post.call_args.args[0], "https://example.test/messages")
                 self.assertEqual(post.call_args.args[1]["anthropic-version"], "2023-06-01")
 
+    def test_gemini_provider_requires_network_and_parses_text(self):
+        self.config["providers"]["gemini"] = {
+            "kind": "gemini", "enabled": True, "api_key_env": "TEST_GEMINI_KEY",
+            "base_url": "https://example.test/models", "model": "test-model",
+        }
+        with patch.dict(os.environ, {"TEST_GEMINI_KEY": "key"}, clear=False):
+            with self.assertRaisesRegex(ValueError, "allow-network"):
+                get_provider("gemini", self.config)
+            with patch("nous_dev.providers._post_json", return_value={
+                "candidates": [{"content": {"parts": [{"text": "rota"}]}}]
+            }) as post:
+                provider = get_provider("gemini", self.config, network_allowed=True)
+                self.assertEqual(provider.complete({
+                    "prompt": "classificar", "instructions": "responda", "memories": [],
+                    "previous": [], "skills": [],
+                }), "rota")
+                self.assertEqual(post.call_args.args[0],
+                                 "https://example.test/models/test-model:generateContent")
+                self.assertEqual(post.call_args.args[1]["x-goog-api-key"], "key")
+
     def test_cli_roundtrip(self):
         path = self.root / "nous.config.json"
         path.write_text('{"version": 1, "providers": {"demo": {"kind": "demo"}}}', encoding="utf-8")

@@ -111,10 +111,13 @@
       "note": "No de texto da Anthropic; nao executa ferramentas locais automaticamente."
     },
     "gemini": {
-      "kind": "command",
-      "enabled": false,
-      "argv": [],
-      "note": "Adaptador nativo pendente"
+      "kind": "gemini",
+      "enabled": true,
+      "api_key_env": "GEMINI_API_KEY",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/models",
+      "model": "gemini-3.8-flash",
+      "max_output_tokens": 2048,
+      "timeout_seconds": 120
     },
     "grok": {
       "kind": "grok",
