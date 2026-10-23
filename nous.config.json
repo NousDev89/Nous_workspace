@@ -75,7 +75,7 @@
     },
     "manus": {
       "kind": "manus",
-      "enabled": false,
+      "enabled": true,
       "api_key_env": "MANUS_API_KEY",
       "endpoint": "https://api.manus.ai/v2/task.create",
       "locale": "pt-BR",
@@ -108,7 +108,7 @@
     },
     "grok": {
       "kind": "grok",
-      "enabled": false,
+      "enabled": true,
       "api_key_env": "XAI_API_KEY",
       "base_url": "https://api.x.ai/v1",
       "model": "grok-4.7",
