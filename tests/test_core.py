@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -9,9 +10,10 @@ from unittest.mock import patch
 
 from nous_dev.cli import main
 from nous_dev.config import load_config
+from nous_dev.env import load_dotenv
 from nous_dev.orchestrator import run_task
 from nous_dev.memory import SharedMemory
-from nous_dev.providers import CommandProvider
+from nous_dev.providers import CommandProvider, get_provider
 from nous_dev.store import Store
 from nous_dev.tools import WorkspaceTools
 
@@ -96,6 +98,50 @@ class CoreTests(unittest.TestCase):
         path.write_text('{"version": 1, "providers": {"demo": {"kind": "demo"}}}', encoding="utf-8")
         config = load_config(str(path))
         self.assertEqual(config["workspace"], self.root)
+
+    def test_dotenv_loads_missing_values_without_overwriting_environment(self):
+        path = self.root / ".env"
+        path.write_text("FIRST=value\nSECOND='two words'\n", encoding="utf-8")
+        with patch.dict(os.environ, {"FIRST": "existing"}, clear=True):
+            self.assertEqual(load_dotenv(path), 1)
+            self.assertEqual(os.environ["FIRST"], "existing")
+            self.assertEqual(os.environ["SECOND"], "two words")
+
+    def test_grok_provider_uses_responses_api_only_when_network_is_allowed(self):
+        self.config["providers"]["grok"] = {
+            "kind": "grok", "enabled": True, "api_key_env": "TEST_GROK_KEY",
+            "base_url": "https://example.test/v1", "model": "test-model",
+        }
+        with patch.dict(os.environ, {"TEST_GROK_KEY": "key"}, clear=False):
+            with self.assertRaisesRegex(ValueError, "allow-network"):
+                get_provider("grok", self.config)
+            with patch("nous_dev.providers._post_json", return_value={
+                "output": [{"content": [{"type": "output_text", "text": "ideia"}]}]
+            }) as post:
+                provider = get_provider("grok", self.config, network_allowed=True)
+                self.assertEqual(provider.complete({
+                    "prompt": "criar", "instructions": "responda", "memories": [],
+                    "previous": [], "skills": [],
+                }), "ideia")
+                self.assertEqual(post.call_args.args[0], "https://example.test/v1/responses")
+
+    def test_manus_provider_creates_private_async_task(self):
+        self.config["providers"]["manus"] = {
+            "kind": "manus", "enabled": True, "api_key_env": "TEST_MANUS_KEY",
+            "endpoint": "https://example.test/task.create",
+        }
+        with patch.dict(os.environ, {"TEST_MANUS_KEY": "key"}, clear=False):
+            with patch("nous_dev.providers._post_json", return_value={
+                "ok": True, "task_id": "task-1", "task_url": "https://manus.example/task-1",
+            }) as post:
+                provider = get_provider("manus", self.config, network_allowed=True)
+                text = provider.complete({
+                    "stage": "work", "prompt": "pesquisar", "instructions": "responda",
+                    "memories": [], "previous": [], "skills": [],
+                })
+                self.assertIn("task-1", text)
+                self.assertEqual(post.call_args.args[0], "https://example.test/task.create")
+                self.assertEqual(post.call_args.args[2]["share_visibility"], "private")
 
     def test_cli_roundtrip(self):
         path = self.root / "nous.config.json"

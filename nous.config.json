@@ -74,10 +74,13 @@
       "note": "GPU privada em nuvem. Requer adaptador HTTPS autenticado; nunca exponha a porta do llama.cpp."
     },
     "manus": {
-      "kind": "command",
+      "kind": "manus",
       "enabled": false,
-      "argv": [],
-      "note": "Adaptador nativo pendente"
+      "api_key_env": "MANUS_API_KEY",
+      "endpoint": "https://api.manus.ai/v2/task.create",
+      "locale": "pt-BR",
+      "agent_profile": "standard",
+      "timeout_seconds": 120
     },
     "openai": {
       "kind": "command",
@@ -104,10 +107,12 @@
       "note": "Adaptador nativo pendente"
     },
     "grok": {
-      "kind": "command",
+      "kind": "grok",
       "enabled": false,
-      "argv": [],
-      "note": "Adaptador nativo pendente"
+      "api_key_env": "XAI_API_KEY",
+      "base_url": "https://api.x.ai/v1",
+      "model": "grok-4.7",
+      "timeout_seconds": 120
     }
   }
 }

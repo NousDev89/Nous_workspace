@@ -12,7 +12,7 @@ class TaskState(TypedDict):
 
 
 def run_task(store, config, project, prompt, providers=None, skill_names=(), allowed=False,
-             memory=None, remember_result=False):
+             memory=None, remember_result=False, network_allowed=False):
     if not project.strip() or not prompt.strip():
         raise ValueError("Informe projeto e pedido.")
     providers = providers or {"plan": "demo", "work": "demo", "review": "demo"}
@@ -20,7 +20,7 @@ def run_task(store, config, project, prompt, providers=None, skill_names=(), all
         from .memory import SharedMemory
         memory = SharedMemory(store, config)
     # Validar tudo antes de criar uma tarefa ou iniciar um processo.
-    clients = {stage: get_provider(providers[stage], config, allowed)
+    clients = {stage: get_provider(providers[stage], config, allowed, network_allowed)
                for stage in ("plan", "work", "review")}
     skills = select_skills(config["skills_dir"], skill_names)
     task_id = store.create_task(project, prompt)

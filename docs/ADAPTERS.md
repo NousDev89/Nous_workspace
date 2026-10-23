@@ -46,12 +46,12 @@ este protocolo. É necessário um adaptador que traduza a entrada e normalize a 
 
 | Serviço | Situação nesta versão |
 | --- | --- |
-| Manus | Registro desativado; adaptador de tarefas pendente |
+| Manus | `kind: manus`; cria tarefa v2 assíncrona e retorna ID/link |
 | OpenAI | Registro desativado; adaptador de API pendente |
 | Codex | Registro desativado; adaptador de agente pendente |
 | Claude Code | Registro desativado; adaptador de agente pendente |
 | Gemini | Registro desativado; adaptador pendente |
-| Grok | Registro desativado; adaptador pendente |
+| Grok | `kind: grok`; chama a Responses API da xAI |
 | Demo | Fluxo local sem IA |
 | bridge-example | Processo de exemplo sem IA |
 

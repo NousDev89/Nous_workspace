@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
+from .env import load_dotenv
 
 
 def load_config(path: str = "nous.config.json") -> dict:
     location = Path(path).resolve()
+    load_dotenv(location.parent / ".env")
     raw = json.loads(location.read_text(encoding="utf-8"))
     if raw.get("version") != 1:
         raise ValueError("Versão de configuração não suportada.")

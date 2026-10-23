@@ -14,7 +14,8 @@ Estação de trabalho híbrida para orquestrar agentes, ferramentas, habilidades
 
 **Esta versão é uma base executável, não uma integração pronta com todos os serviços.**
 Manus, OpenAI, Codex, Claude Code, Gemini e Grok têm entradas de configuração.
-Seus adaptadores nativos, painel visual e MCP estão no roteiro.
+Os adaptadores nativos de Grok e Manus já estão disponíveis, porém começam desativados.
+Painel visual e MCP estão no roteiro.
 A demonstração não chama modelos, não programa e não altera arquivos do projeto.
 
 ## Instalar no Windows PowerShell
@@ -82,6 +83,28 @@ Veja [o protocolo](docs/ADAPTERS.md) antes de configurar um serviço real.
 Uma assinatura de aplicativo não é automaticamente uma credencial para API.
 Não coloque chaves no repositório, nas habilidades ou nas memórias.
 Os dados selecionados do projeto serão enviados ao processo configurado quando o adaptador for executado.
+
+## Grok, Manus e .env local
+
+O Nous lê opcionalmente um arquivo `.env` na raiz, antes de carregar a configuração. O arquivo é
+ignorado pelo Git; variáveis que já existam no Windows têm precedência. Copie o modelo e guarde as
+chaves apenas no computador que executará as chamadas:
+
+```powershell
+Copy-Item .env.example .env
+# Edite .env localmente: XAI_API_KEY=... e/ou MANUS_API_KEY=...
+```
+
+Em `nous.config.json`, altere o provedor desejado para `"enabled": true`. Depois, uma chamada de
+rede exige confirmação explícita na própria CLI:
+
+```powershell
+.\.venv\Scripts\python.exe -m nous_dev run --project nous --prompt "Criar alternativas" --planner grok --allow-network
+.\.venv\Scripts\python.exe -m nous_dev run --project nous --prompt "Executar pesquisa" --worker manus --allow-network
+```
+
+Grok usa a Responses API. Manus cria uma tarefa privada e assíncrona, retornando o ID e o link; o
+Nous não aprova conectores, envios, compras ou outras ações externas em nome do usuário.
 
 ## Ferramentas
 

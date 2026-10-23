@@ -35,6 +35,8 @@ def parser():
     run.add_argument("--reviewer", default="demo")
     run.add_argument("--skill", action="append", default=[])
     run.add_argument("--allow-commands", action="store_true")
+    run.add_argument("--allow-network", action="store_true",
+                     help="Permite chamadas aos provedores de rede habilitados.")
     run.add_argument("--remember-result", action="store_true",
                      help="Salva a saída final como memória compartilhada do projeto.")
     task = commands.add_parser("task")
@@ -67,8 +69,8 @@ def main(argv=None):
                       name: {
                           "kind": spec.get("kind"),
                           "status": ("demo" if spec.get("kind") == "demo" else
-                                     "configured_not_tested" if spec.get("enabled") and spec.get("argv")
-                                     else "not_configured")
+                                     "configured_not_tested" if spec.get("enabled")
+                                     else "disabled")
                       } for name, spec in config.get("providers", {}).items()
                   }})
         elif args.command == "memory" and args.action == "add":
@@ -84,7 +86,7 @@ def main(argv=None):
             emit(run_task(store, config, args.project, args.prompt,
                           {"plan": args.planner, "work": args.worker, "review": args.reviewer},
                           args.skill, args.allow_commands, memory,
-                          args.remember_result))
+                          args.remember_result, args.allow_network))
         return 0
     except (ValueError, OSError, RuntimeError, ImportError) as error:
         print(f"Erro: {error}", file=sys.stderr)
