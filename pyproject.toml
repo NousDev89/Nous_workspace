@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nous-dev"
+version = "0.1.0"
+description = "Orquestracao de agentes e memoria compartilhada por projeto"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["langgraph>=1.0,<2"]
+
+[project.scripts]
+nous = "nous_dev.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nous_dev*"]

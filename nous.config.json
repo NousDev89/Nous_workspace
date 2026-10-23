@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "data_dir": ".nous",
+  "workspace": ".",
+  "skills_dir": "skills",
+  "orchestration": {
+    "graph": "router -> creative|implement|review|action|cloud_gpu",
+    "default_route": "cloud-api",
+    "memory_backend": "sqlite-vec",
+    "fallback_memory_backend": "sqlite-text",
+    "cloud_gpu_auto_shutdown_minutes": 10
+  },
+  "accounts": {
+    "openai_codex": {
+      "provider": "openai",
+      "roles": ["review"],
+      "api_key_env": "OPENAI_CODEX_API_KEY"
+    },
+    "openai_gpt": {
+      "provider": "openai",
+      "roles": ["router"],
+      "api_key_env": "OPENAI_GPT_API_KEY"
+    },
+    "anthropic_claude": {
+      "provider": "anthropic",
+      "roles": ["implement"],
+      "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    "xai_grok": {
+      "provider": "xai",
+      "roles": ["creative"],
+      "api_key_env": "XAI_API_KEY"
+    },
+    "manus": {
+      "provider": "manus",
+      "roles": ["action"],
+      "api_key_env": "MANUS_API_KEY"
+    },
+    "cloud_llama": {
+      "provider": "llama",
+      "roles": ["cloud_gpu"],
+      "endpoint_env": "NOUS_CLOUD_LLAMA_URL",
+      "token_env": "NOUS_CLOUD_LLAMA_TOKEN"
+    }
+  },
+  "providers": {
+    "demo": {
+      "kind": "demo"
+    },
+    "bridge-example": {
+      "kind": "command",
+      "enabled": true,
+      "argv": [
+        "{python}",
+        "examples/bridge.py"
+      ],
+      "timeout_seconds": 30
+    },
+    "llama-local": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "Ative somente após configurar um adaptador HTTP para o llama.cpp em 127.0.0.1:8081."
+    },
+    "llama-cloud": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "GPU privada em nuvem. Requer adaptador HTTPS autenticado; nunca exponha a porta do llama.cpp."
+    },
+    "manus": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "Adaptador nativo pendente"
+    },
+    "openai": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "Adaptador nativo pendente"
+    },
+    "codex": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "Adaptador nativo pendente"
+    },
+    "claude-code": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "Adaptador nativo pendente"
+    },
+    "gemini": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "Adaptador nativo pendente"
+    },
+    "grok": {
+      "kind": "command",
+      "enabled": false,
+      "argv": [],
+      "note": "Adaptador nativo pendente"
+    }
+  }
+}
