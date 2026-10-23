@@ -98,7 +98,17 @@
       "kind": "command",
       "enabled": false,
       "argv": [],
-      "note": "Adaptador nativo pendente"
+      "note": "Adaptador de agente local pendente; nao confundir com a API de mensagens."
+    },
+    "claude-api": {
+      "kind": "anthropic",
+      "enabled": true,
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "endpoint": "https://api.anthropic.com/v1/messages",
+      "model": "claude-sonnet-4-5-20250929",
+      "max_tokens": 2048,
+      "timeout_seconds": 120,
+      "note": "No de texto da Anthropic; nao executa ferramentas locais automaticamente."
     },
     "gemini": {
       "kind": "command",

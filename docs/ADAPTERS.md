@@ -50,6 +50,7 @@ este protocolo. É necessário um adaptador que traduza a entrada e normalize a 
 | OpenAI | Registro desativado; adaptador de API pendente |
 | Codex | Registro desativado; adaptador de agente pendente |
 | Claude Code | Registro desativado; adaptador de agente pendente |
+| Claude API | `kind: anthropic`; Messages API para saída de texto, sem ferramentas locais |
 | Gemini | Registro desativado; adaptador pendente |
 | Grok | `kind: grok`; chama a Responses API da xAI |
 | Demo | Fluxo local sem IA |

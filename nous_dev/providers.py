@@ -135,6 +135,46 @@ class GrokProvider:
         return text
 
 
+class AnthropicProvider:
+    """Cliente da Messages API da Anthropic; retorna texto, sem ferramentas locais."""
+
+    def __init__(self, spec, network_allowed=False):
+        self.api_key, self.timeout = _require_enabled_network(spec, "claude-api", network_allowed)
+        self.endpoint = str(spec.get("endpoint", "https://api.anthropic.com/v1/messages"))
+        self.model = str(spec.get("model", "claude-sonnet-4-5-20250929"))
+        self.max_tokens = int(spec.get("max_tokens", 2048))
+        if not 1 <= self.max_tokens <= 16384:
+            raise ValueError("max_tokens deve estar entre 1 e 16384.")
+
+    def complete(self, request):
+        context = {
+            "pedido": request["prompt"],
+            "memorias": request["memories"],
+            "saidas_anteriores": request["previous"],
+            "habilidades": request["skills"],
+        }
+        result = _post_json(
+            self.endpoint,
+            {"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
+            {
+                "model": self.model,
+                "max_tokens": self.max_tokens,
+                "system": request["instructions"],
+                "messages": [{"role": "user", "content": json.dumps(context, ensure_ascii=False)}],
+            },
+            self.timeout,
+        )
+        texts = [
+            item["text"] for item in result.get("content", [])
+            if isinstance(item, dict) and item.get("type") == "text"
+            and isinstance(item.get("text"), str)
+        ]
+        text = "\n".join(texts).strip()
+        if not text:
+            raise RuntimeError("Claude não retornou texto de saída.")
+        return text
+
+
 class ManusProvider:
     """Cria uma tarefa Manus v2 e devolve sua URL; não confirma ações externas."""
 
@@ -182,6 +222,8 @@ def get_provider(name, config, allowed=False, network_allowed=False):
         return CommandProvider(spec, config["base_dir"], allowed)
     if spec.get("kind") == "grok":
         return GrokProvider(spec, network_allowed)
+    if spec.get("kind") == "anthropic":
+        return AnthropicProvider(spec, network_allowed)
     if spec.get("kind") == "manus":
         return ManusProvider(spec, network_allowed)
     raise ValueError("Tipo de provedor não suportado.")

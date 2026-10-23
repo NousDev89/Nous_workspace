@@ -143,6 +143,25 @@ class CoreTests(unittest.TestCase):
                 self.assertEqual(post.call_args.args[0], "https://example.test/task.create")
                 self.assertEqual(post.call_args.args[2]["share_visibility"], "private")
 
+    def test_anthropic_provider_requires_network_and_parses_text(self):
+        self.config["providers"]["claude-api"] = {
+            "kind": "anthropic", "enabled": True, "api_key_env": "TEST_ANTHROPIC_KEY",
+            "endpoint": "https://example.test/messages", "model": "test-model",
+        }
+        with patch.dict(os.environ, {"TEST_ANTHROPIC_KEY": "key"}, clear=False):
+            with self.assertRaisesRegex(ValueError, "allow-network"):
+                get_provider("claude-api", self.config)
+            with patch("nous_dev.providers._post_json", return_value={
+                "content": [{"type": "text", "text": "implementação"}]
+            }) as post:
+                provider = get_provider("claude-api", self.config, network_allowed=True)
+                self.assertEqual(provider.complete({
+                    "prompt": "implementar", "instructions": "responda", "memories": [],
+                    "previous": [], "skills": [],
+                }), "implementação")
+                self.assertEqual(post.call_args.args[0], "https://example.test/messages")
+                self.assertEqual(post.call_args.args[1]["anthropic-version"], "2023-06-01")
+
     def test_cli_roundtrip(self):
         path = self.root / "nous.config.json"
         path.write_text('{"version": 1, "providers": {"demo": {"kind": "demo"}}}', encoding="utf-8")
